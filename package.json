@@ -1,0 +1,29 @@
+{
+  "name": "onestop-student-ecosystem",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OneStop Student Ecosystem - Comprehensive platform for international students",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "db:up": "docker-compose up -d postgres redis",
+    "db:down": "docker-compose down",
+    "db:reset": "docker-compose down -v && docker-compose up -d postgres redis",
+    "db:migrate": "cd packages/database && npm run migrate"
+  },
+  "devDependencies": {
+    "turbo": "^1.10.16"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
+
