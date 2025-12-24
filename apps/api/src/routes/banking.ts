@@ -43,11 +43,13 @@ router.get('/resources', async (req: Request, res: Response) => {
       status: 'success',
       data: result.rows,
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching banking resources:', error);
+    logger.error('Error details:', { message: error.message, stack: error.stack });
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch banking resources',
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
     });
   }
 });

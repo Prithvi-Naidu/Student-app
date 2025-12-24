@@ -13,25 +13,56 @@ type BankingResourceListItem = {
   category: string;
   resource_type: string;
   tags: string[] | null;
-  summary: string | null;
+  summary?: string | null;
+  content?: string;
   updated_at: string;
 };
 
+// Utility function to strip HTML tags and get plain text
+function stripHtmlTags(html: string | null | undefined): string {
+  if (!html) return '';
+  // Remove HTML tags and decode HTML entities
+  return html
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+    .replace(/&amp;/g, '&') // Replace &amp; with &
+    .replace(/&lt;/g, '<') // Replace &lt; with <
+    .replace(/&gt;/g, '>') // Replace &gt; with >
+    .replace(/&quot;/g, '"') // Replace &quot; with "
+    .replace(/&#39;/g, "'") // Replace &#39; with '
+    .trim();
+}
+
 async function fetchResources(): Promise<BankingResourceListItem[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-  const res = await fetch(`${baseUrl}/api/banking/resources`, { cache: "no-store" });
-  if (!res.ok) return [];
-  const json = (await res.json()) as { status: string; data: any[] };
-  return (json.data || []).map((r) => ({
-    id: r.id,
-    title: r.title,
-    slug: r.slug,
-    category: r.category,
-    resource_type: r.resource_type,
-    tags: r.tags ?? null,
-    summary: r.summary ?? null,
-    updated_at: r.updated_at,
-  }));
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+    const res = await fetch(`${baseUrl}/api/banking/resources`, { 
+      cache: "no-store",
+      next: { revalidate: 0 }
+    });
+    if (!res.ok) {
+      console.error('API error:', res.status, res.statusText);
+      return [];
+    }
+    const json = (await res.json()) as { status: string; data: any[] };
+    if (json.status === 'success' && json.data) {
+      return json.data.map((r) => ({
+        id: r.id,
+        title: r.title,
+        slug: r.slug,
+        category: r.category,
+        resource_type: r.resource_type,
+        tags: r.tags ?? null,
+        summary: r.summary ?? null,
+        content: r.content,
+        updated_at: r.updated_at,
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching banking resources:', error);
+    return [];
+  }
 }
 
 export default async function BankingPage() {
@@ -92,8 +123,9 @@ export default async function BankingPage() {
         </Card>
 
         {/* Resources Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {sampleResources.map((resource) => (
+        {sampleResources.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {sampleResources.map((resource) => (
             <Card key={resource.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between mb-2">
@@ -104,7 +136,11 @@ export default async function BankingPage() {
                 </div>
                 <CardTitle className="text-xl">{resource.title}</CardTitle>
                 <CardDescription className="line-clamp-2">
-                  {resource.summary ?? "Open this resource to read the full guide."}
+                  {resource.summary 
+                    ? stripHtmlTags(resource.summary)
+                    : resource.content 
+                      ? stripHtmlTags(resource.content).substring(0, 150) + "..."
+                      : "Open this resource to read the full guide."}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -124,7 +160,16 @@ export default async function BankingPage() {
               </CardContent>
             </Card>
           ))}
-        </div>
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-center text-muted-foreground">
+                No resources available at the moment. Please check back later.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Partner Banks Section */}
         <Card>
