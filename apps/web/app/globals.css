@@ -58,3 +58,50 @@
   }
 }
 
+/* Article content typography (simple, without tailwind typography plugin) */
+.article-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.article-content h2 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+.article-content h3 {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.article-content p {
+  line-height: 1.75;
+}
+
+.article-content ul,
+.article-content ol {
+  padding-left: 1.25rem;
+}
+
+.article-content ul {
+  list-style: disc;
+}
+
+.article-content ol {
+  list-style: decimal;
+}
+
+.article-content a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.article-content a:hover {
+  opacity: 0.9;
+}
+
