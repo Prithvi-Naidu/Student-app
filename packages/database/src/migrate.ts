@@ -7,7 +7,7 @@ dotenv.config();
 
 const pool = new Pool({
   host: process.env.POSTGRES_HOST || 'localhost',
-  port: parseInt(process.env.POSTGRES_PORT || '5432'),
+  port: parseInt(process.env.POSTGRES_PORT || '5433'),
   database: process.env.POSTGRES_DB || 'onestop_db',
   user: process.env.POSTGRES_USER || 'onestop',
   password: process.env.POSTGRES_PASSWORD || 'onestop_dev_password',

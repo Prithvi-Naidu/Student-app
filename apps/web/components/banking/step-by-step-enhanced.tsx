@@ -114,4 +114,3 @@ export function StepByStepEnhanced({ steps, className }: StepByStepEnhancedProps
     </div>
   );
 }
-

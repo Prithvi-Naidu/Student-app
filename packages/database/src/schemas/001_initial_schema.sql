@@ -4,6 +4,13 @@
 -- Extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Storage type enum (used by documents table)
+DO $$ BEGIN
+    CREATE TYPE storage_type_enum AS ENUM ('local', 'cloud_r2', 'digilocker');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 -- Listings table (Housing Finder)
 CREATE TABLE IF NOT EXISTS listings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -58,6 +65,15 @@ CREATE TABLE IF NOT EXISTS documents (
   expiration_date DATE,
   metadata JSONB, -- Additional metadata
   encrypted BOOLEAN DEFAULT false,
+  storage_type storage_type_enum DEFAULT 'local',
+  cloud_provider VARCHAR(50),
+  cloud_url TEXT,
+  cloud_key TEXT,
+  encryption_key_hash TEXT,
+  encryption_iv TEXT,
+  digilocker_linked BOOLEAN DEFAULT false,
+  digilocker_document_id TEXT,
+  country_code VARCHAR(10),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

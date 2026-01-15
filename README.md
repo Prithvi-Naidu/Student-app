@@ -72,12 +72,15 @@ This creates all necessary database tables.
 Create `.env` files in `apps/web` and `apps/api` with:
 ```env
 # Database
-DATABASE_URL=postgresql://onestop:onestop_dev_password@localhost:5432/onestop_db
+DATABASE_URL=postgresql://onestop:onestop_dev_password@localhost:5433/onestop_db
 POSTGRES_USER=onestop
 POSTGRES_PASSWORD=onestop_dev_password
 POSTGRES_DB=onestop_db
 
 # Redis
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5433
+
 REDIS_URL=redis://localhost:6379
 
 # API
@@ -86,6 +89,25 @@ NODE_ENV=development
 
 # Frontend (apps/web/.env.local)
 NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Authentication (NextAuth.js)
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=<generate-secret-32-chars-minimum>
+DATABASE_URL=postgresql://onestop:onestop_dev_password@localhost:5433/onestop_db
+
+# OAuth Providers (see docs/oauth-setup-guide.md for setup instructions)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+APPLE_CLIENT_ID=
+APPLE_CLIENT_SECRET=
+APPLE_TEAM_ID=
+APPLE_KEY_ID=
+MICROSOFT_CLIENT_ID=
+MICROSOFT_CLIENT_SECRET=
+MICROSOFT_TENANT_ID=common
 ```
 
 5. **Start development servers:**

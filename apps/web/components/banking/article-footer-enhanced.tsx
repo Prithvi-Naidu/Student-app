@@ -102,4 +102,3 @@ export function ArticleFooter({ article, sourceUrls = [] }: ArticleFooterProps) 
     </footer>
   );
 }
-

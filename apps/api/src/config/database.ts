@@ -6,7 +6,8 @@ import { logger } from '../utils/logger';
 const getPoolConfig = () => {
   const config = {
     host: process.env.POSTGRES_HOST || '127.0.0.1', // Use 127.0.0.1 to connect to Docker container
-    port: parseInt(process.env.POSTGRES_PORT || '5433'), // Use 5433 to connect to Docker container
+    // Default 5433 for local Docker (compose maps 5433->5432). CI overrides via POSTGRES_PORT=5432.
+    port: parseInt(process.env.POSTGRES_PORT || '5433'),
     database: process.env.POSTGRES_DB || 'onestop_db',
     user: process.env.POSTGRES_USER || 'onestop',
     password: process.env.POSTGRES_PASSWORD || 'onestop_dev_password',

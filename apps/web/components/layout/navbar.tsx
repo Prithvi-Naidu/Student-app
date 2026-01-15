@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Home, Menu, X } from "lucide-react";
+import { UserMenu } from "@/components/auth/user-menu";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: session } = useSession();
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -49,10 +52,18 @@ export function Navbar() {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="ghost" size="sm">
-            Sign In
-          </Button>
-          <Button size="sm">Get Started</Button>
+          {session ? (
+            <UserMenu />
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/signin">Sign In</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link href="/signin">Get Started</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -103,10 +114,22 @@ export function Navbar() {
               Document Vault
             </Link>
             <div className="flex flex-col space-y-2 pt-4 border-t">
-              <Button variant="outline" className="w-full">
-                Sign In
-              </Button>
-              <Button className="w-full">Get Started</Button>
+              {session ? (
+                <UserMenu />
+              ) : (
+                <>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href="/signin" onClick={() => setMobileMenuOpen(false)}>
+                      Sign In
+                    </Link>
+                  </Button>
+                  <Button className="w-full" asChild>
+                    <Link href="/signin" onClick={() => setMobileMenuOpen(false)}>
+                      Get Started
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

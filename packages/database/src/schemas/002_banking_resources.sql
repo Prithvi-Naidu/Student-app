@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS banking_resources (
   partner_bank_name VARCHAR(255),
   partner_referral_link TEXT,
   tags TEXT[],
+  summary TEXT,
+  source_urls TEXT[],
+  last_verified DATE,
   published BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

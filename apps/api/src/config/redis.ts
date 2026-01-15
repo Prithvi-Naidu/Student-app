@@ -20,10 +20,11 @@ export const connectRedis = async () => {
   try {
     await redisClient.connect();
     logger.info('Connected to Redis');
+    return true;
   } catch (error) {
     logger.error('Failed to connect to Redis', error);
-    // Rethrow error so server startup can handle it
-    throw error;
+    // Redis is optional in Phase 1; allow server to start
+    return false;
   }
 };
 

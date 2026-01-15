@@ -260,4 +260,3 @@ export function RequiredDocumentsChecklist({ className }: RequiredDocumentsCheck
     </div>
   );
 }
-

@@ -171,4 +171,3 @@ export function ArticleSidebar({ article }: ArticleSidebarProps) {
     </aside>
   );
 }
-

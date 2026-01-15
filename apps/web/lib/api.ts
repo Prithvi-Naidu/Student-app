@@ -12,11 +12,8 @@ export class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
+
     const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
       ...options,
     };
 
@@ -24,10 +21,22 @@ export class ApiClient {
       const response = await fetch(url, config);
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({
-          message: `HTTP error! status: ${response.status}`,
-        }));
+        // Try to parse error JSON, but handle blob responses
+        const contentType = response.headers.get('content-type');
+        const error = contentType?.includes('application/json')
+          ? await response.json().catch(() => ({
+              message: `HTTP error! status: ${response.status}`,
+            }))
+          : {
+              message: `HTTP error! status: ${response.status}`,
+            };
         throw new Error(error.message || 'An error occurred');
+      }
+
+      // Handle blob responses (for file downloads)
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('application/octet-stream') || contentType?.includes('application/pdf')) {
+        return response.blob() as unknown as T;
       }
 
       return await response.json();
@@ -42,18 +51,40 @@ export class ApiClient {
   }
 
   async post<T>(endpoint: string, data?: any, options?: RequestInit): Promise<T> {
+    // If data is FormData, don't stringify it
+    const isFormData = data instanceof FormData;
+    const body = isFormData ? data : (data ? JSON.stringify(data) : undefined);
+    const headers = isFormData
+      ? options?.headers // Don't set Content-Type for FormData - browser will set it with boundary
+      : {
+          'Content-Type': 'application/json',
+          ...(options?.headers as HeadersInit || {}),
+        };
+    
     return this.request<T>(endpoint, {
       ...options,
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
+      body,
+      headers,
     });
   }
 
   async put<T>(endpoint: string, data?: any, options?: RequestInit): Promise<T> {
+    // If data is FormData, don't stringify it
+    const isFormData = data instanceof FormData;
+    const body = isFormData ? data : (data ? JSON.stringify(data) : undefined);
+    const headers = isFormData
+      ? options?.headers // Don't set Content-Type for FormData - browser will set it with boundary
+      : {
+          'Content-Type': 'application/json',
+          ...(options?.headers as HeadersInit || {}),
+        };
+
     return this.request<T>(endpoint, {
       ...options,
       method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
+      body,
+      headers,
     });
   }
 

@@ -1,60 +1,258 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { FileText, Upload, Download, Trash2, AlertCircle, Calendar } from "lucide-react";
+import { FileText, Download, Trash2, AlertCircle, Calendar, Cloud, Lock, Shield } from "lucide-react";
+import { EncryptedUpload } from "@/components/vault/encrypted-upload";
+import { DigiLockerIntegration } from "@/components/vault/digilocker-integration";
+import { apiClient } from "@/lib/api";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+interface Document {
+  id: string;
+  document_type: string;
+  file_name: string;
+  expiration_date?: string;
+  created_at: string;
+  storage_type?: "local" | "cloud_r2" | "digilocker";
+  encrypted?: boolean;
+  cloud_provider?: string;
+}
 
 export default function VaultPage() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [documentType, setDocumentType] = useState("");
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [countryCode, setCountryCode] = useState<string>("IN"); // Default to India for DigiLocker
+  const backgroundFetchRef = useRef(false);
 
-  // Sample documents - will be replaced with API data
-  const sampleDocuments = [
-    {
-      id: "1",
-      document_type: "I-20",
-      file_name: "i20-document.pdf",
-      expiration_date: "2025-12-31",
-      created_at: "2024-01-15",
-    },
-    {
-      id: "2",
-      document_type: "Passport",
-      file_name: "passport.pdf",
-      expiration_date: "2026-06-30",
-      created_at: "2024-01-10",
-    },
-    {
-      id: "3",
-      document_type: "Visa",
-      file_name: "visa-stamp.pdf",
-      expiration_date: "2025-03-15",
-      created_at: "2024-01-05",
-    },
-  ];
+  useEffect(() => {
+    fetchDocuments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const documentTypes = ["I-20", "Passport", "Visa", "Transcript", "Insurance", "Other"];
+  const fetchDocuments = async (forceRefresh = false) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Check cache first (unless force refresh)
+      if (!forceRefresh) {
+        const cacheKey = 'vault_documents_cache';
+        const cacheData = sessionStorage.getItem(cacheKey);
+        
+        if (cacheData) {
+          try {
+            const { documents: cachedDocs, timestamp } = JSON.parse(cacheData);
+            const cacheAge = Date.now() - timestamp;
+            const CACHE_TTL = 30000; // 30 seconds
+            
+            // Use cached data if it's fresh
+            if (cacheAge < CACHE_TTL) {
+              setDocuments(cachedDocs);
+              setIsLoading(false);
+              
+              // Only fetch in background if cache is older than 15 seconds (half of TTL)
+              // This prevents unnecessary API calls when cache is very fresh
+              if (cacheAge > 15000) {
+                fetchDocumentsInBackground();
+              }
+              return;
+            }
+          } catch (e) {
+            // Cache parse error, continue with API call
+            console.warn("Cache parse error:", e);
+          }
+        }
+      }
+
+      // Fetch from API
+      const response = await apiClient.get<{ status: string; data: Document[] }>("/api/documents");
+      if (response.status === "success") {
+        const docs = response.data || [];
+        setDocuments(docs);
+        
+        // Update cache
+        const cacheKey = 'vault_documents_cache';
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          documents: docs,
+          timestamp: Date.now(),
+        }));
+      } else {
+        setError(response.message || "Failed to fetch documents");
+      }
+    } catch (err: any) {
+      console.error("Error fetching documents:", err);
+      setError(err.message || "Failed to fetch documents");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Background fetch to update cache without showing loading state
+  const fetchDocumentsInBackground = async () => {
+    // Prevent multiple simultaneous background fetches
+    if (backgroundFetchRef.current) {
+      return;
+    }
+    
+    backgroundFetchRef.current = true;
+    
+    try {
+      const response = await apiClient.get<{ status: string; data: Document[] }>("/api/documents");
+      if (response.status === "success") {
+        const docs = response.data || [];
+        setDocuments(docs);
+        
+        // Update cache
+        const cacheKey = 'vault_documents_cache';
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          documents: docs,
+          timestamp: Date.now(),
+        }));
+      }
+    } catch (err) {
+      // Silent fail for background fetch
+      console.warn("Background fetch failed:", err);
+    } finally {
+      backgroundFetchRef.current = false;
+    }
+  };
+
+      const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this document?")) {
+          return;
+        }
+
+        try {
+          await apiClient.delete(`/api/documents/${id}`);
+          const updatedDocs = documents.filter((doc) => doc.id !== id);
+          setDocuments(updatedDocs);
+          
+          // Update cache
+          const cacheKey = 'vault_documents_cache';
+          sessionStorage.setItem(cacheKey, JSON.stringify({
+            documents: updatedDocs,
+            timestamp: Date.now(),
+          }));
+        } catch (err: any) {
+          console.error("Error deleting document:", err);
+          alert(err.message || "Failed to delete document");
+        }
+      };
+
+  const handleDownload = async (document: Document) => {
+    try {
+      // Check if document is encrypted
+      if (document.encrypted) {
+        // For encrypted documents, we need to get the encryption key
+        const storedKeys = JSON.parse(sessionStorage.getItem("encryption_keys") || "[]");
+        const keyData = storedKeys.find((k: any) => k.documentId === document.id);
+        
+        if (!keyData) {
+          const key = prompt(
+            "This document is encrypted. Please enter your encryption key:"
+          );
+          if (!key) {
+            return;
+          }
+          
+          // Use the provided key - fetch as blob
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+          const response = await fetch(
+            `${baseUrl}/api/documents/${document.id}/download?encryption_key=${encodeURIComponent(key)}`
+          );
+          
+          if (!response.ok) {
+            throw new Error("Failed to download file");
+          }
+          
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", document.file_name);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+        } else {
+          // Use stored key
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+          const response = await fetch(
+            `${baseUrl}/api/documents/${document.id}/download?encryption_key=${encodeURIComponent(keyData.key)}`
+          );
+          
+          if (!response.ok) {
+            throw new Error("Failed to download file");
+          }
+          
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", document.file_name);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+        }
+      } else {
+        // Regular download
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        const response = await fetch(
+          `${baseUrl}/api/documents/${document.id}/download`
+        );
+        
+        if (!response.ok) {
+          throw new Error("Failed to download file");
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", document.file_name);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (err: any) {
+      console.error("Error downloading document:", err);
+      alert(err.response?.data?.message || "Failed to download document");
+    }
+  };
 
   const isExpiringSoon = (expirationDate: string) => {
+    if (!expirationDate) return false;
     const expDate = new Date(expirationDate);
     const today = new Date();
     const daysUntilExpiry = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return daysUntilExpiry <= 30 && daysUntilExpiry > 0;
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+  const getStorageBadge = (document: Document) => {
+    if (document.storage_type === "cloud_r2") {
+      return (
+        <Badge variant="secondary" className="flex items-center gap-1">
+          <Cloud className="h-3 w-3" />
+          Cloud
+        </Badge>
+      );
     }
-  };
-
-  const handleUpload = () => {
-    // Upload logic will be implemented with API integration
-    console.log("Upload:", selectedFile, documentType);
+    if (document.storage_type === "digilocker") {
+      return (
+        <Badge variant="secondary" className="flex items-center gap-1">
+          <Shield className="h-3 w-3" />
+          DigiLocker
+        </Badge>
+      );
+    }
+    return null;
   };
 
   return (
@@ -64,50 +262,23 @@ export default function VaultPage() {
         <div>
           <h1 className="text-4xl font-bold mb-2">Document Vault</h1>
           <p className="text-muted-foreground text-lg">
-            Securely store and manage your important documents
+            Securely store and manage your important documents with encryption and cloud storage
           </p>
         </div>
 
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         {/* Upload Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Upload Document</CardTitle>
-            <CardDescription>
-              Upload and securely store your important documents
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Document Type</label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={documentType}
-                  onChange={(e) => setDocumentType(e.target.value)}
-                >
-                  <option value="">Select type...</option>
-                  {documentTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">File</label>
-                <Input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={handleFileSelect}
-                />
-              </div>
-            </div>
-            <Button onClick={handleUpload} disabled={!selectedFile || !documentType}>
-              <Upload className="mr-2 h-4 w-4" />
-              Upload Document
-            </Button>
-          </CardContent>
-        </Card>
+        <EncryptedUpload onUploadSuccess={() => fetchDocuments(true)} />
+
+        {/* DigiLocker Integration (for Indian students) - Collapsible Card */}
+        {countryCode === "IN" && <DigiLockerIntegration />}
 
         {/* Documents List */}
         <Card>
@@ -118,49 +289,78 @@ export default function VaultPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {sampleDocuments.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="p-3 rounded-lg bg-primary/10">
-                      <FileText className="h-6 w-6 text-primary" />
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading documents...</p>
+              </div>
+            ) : documents.length > 0 ? (
+              <div className="space-y-4">
+                {documents.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="p-3 rounded-lg bg-primary/10">
+                        <FileText className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <h3 className="font-semibold">{doc.file_name}</h3>
+                          <Badge variant="secondary">{doc.document_type}</Badge>
+                          {getStorageBadge(doc)}
+                          {doc.encrypted && (
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <Lock className="h-3 w-3" />
+                              Encrypted
+                            </Badge>
+                          )}
+                          {doc.expiration_date && isExpiringSoon(doc.expiration_date) && (
+                            <Badge variant="destructive" className="flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3" />
+                              Expiring Soon
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                          {doc.expiration_date && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              Expires: {new Date(doc.expiration_date).toLocaleDateString()}
+                            </span>
+                          )}
+                          <span>Uploaded: {new Date(doc.created_at).toLocaleDateString()}</span>
+                          {doc.cloud_provider && (
+                            <span className="flex items-center gap-1">
+                              <Cloud className="h-4 w-4" />
+                              {doc.cloud_provider}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold">{doc.file_name}</h3>
-                        <Badge variant="secondary">{doc.document_type}</Badge>
-                        {isExpiringSoon(doc.expiration_date) && (
-                          <Badge variant="destructive" className="flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            Expiring Soon
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          Expires: {new Date(doc.expiration_date).toLocaleDateString()}
-                        </span>
-                        <span>Uploaded: {new Date(doc.created_at).toLocaleDateString()}</span>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownload(doc)}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive"
+                        onClick={() => handleDelete(doc.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {sampleDocuments.length === 0 && (
+                ))}
+              </div>
+            ) : (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-semibold mb-2">No documents yet</h3>
@@ -175,4 +375,3 @@ export default function VaultPage() {
     </DashboardLayout>
   );
 }
-

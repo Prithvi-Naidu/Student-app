@@ -39,12 +39,12 @@ This creates all necessary database tables.
 
 **For the API** (`apps/api/.env`):
 ```env
-DATABASE_URL=postgresql://onestop:onestop_dev_password@localhost:5432/onestop_db
+DATABASE_URL=postgresql://onestop:onestop_dev_password@localhost:5433/onestop_db
 POSTGRES_USER=onestop
 POSTGRES_PASSWORD=onestop_dev_password
 POSTGRES_DB=onestop_db
 POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
+POSTGRES_PORT=5433
 
 REDIS_URL=redis://localhost:6379
 REDIS_HOST=localhost

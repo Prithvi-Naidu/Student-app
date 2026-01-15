@@ -79,7 +79,7 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col gap-4 sm:flex-row">
               <Button asChild size="lg" className="text-lg px-8">
-                <Link href="#get-started">
+                <Link href="/signin">
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -181,11 +181,11 @@ export default function LandingPage() {
               Ready to Get Started?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join thousands of students who are already thriving with OneStop
+              Join thousands of students who are already thriving with OneStop. Sign up in seconds with your existing account.
             </p>
             <Button asChild size="lg" variant="secondary" className="text-lg px-8">
-              <Link href="/signup">
-                Create Your Account
+              <Link href="/signin">
+                Sign Up Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
