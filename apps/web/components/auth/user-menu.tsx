@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +17,7 @@ import { User, LogOut } from "lucide-react";
 
 export function UserMenu() {
   const { data: session, status } = useSession();
+  const [imageError, setImageError] = useState(false);
 
   if (status === "loading") {
     return (
@@ -35,13 +37,19 @@ export function UserMenu() {
     .join("")
     .toUpperCase()
     .slice(0, 2) || "U";
+  const avatarSrc = !imageError ? session.user.image || undefined : undefined;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={session.user.image || undefined} alt={session.user.name || ""} />
+            <AvatarImage
+              src={avatarSrc}
+              alt={session.user.name || ""}
+              referrerPolicy="no-referrer"
+              onError={() => setImageError(true)}
+            />
             <AvatarFallback>{userInitials}</AvatarFallback>
           </Avatar>
         </Button>

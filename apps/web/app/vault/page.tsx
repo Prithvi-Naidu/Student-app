@@ -10,6 +10,7 @@ import { EncryptedUpload } from "@/components/vault/encrypted-upload";
 import { DigiLockerIntegration } from "@/components/vault/digilocker-integration";
 import { apiClient } from "@/lib/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useSession } from "next-auth/react";
 
 interface Document {
   id: string;
@@ -23,11 +24,22 @@ interface Document {
 }
 
 export default function VaultPage() {
+  const { data: session } = useSession();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [countryCode, setCountryCode] = useState<string>("IN"); // Default to India for DigiLocker
   const backgroundFetchRef = useRef(false);
+
+  const buildUserHeaders = () => {
+    const headers: HeadersInit = {};
+    if (session?.user?.id) {
+      headers["x-user-id"] = session.user.id;
+      if (session.user.email) headers["x-user-email"] = session.user.email;
+      if (session.user.name) headers["x-user-name"] = session.user.name;
+    }
+    return headers;
+  };
 
   useEffect(() => {
     fetchDocuments();
@@ -70,7 +82,9 @@ export default function VaultPage() {
       }
 
       // Fetch from API
-      const response = await apiClient.get<{ status: string; data: Document[] }>("/api/documents");
+      const response = await apiClient.get<{ status: string; data: Document[] }>("/api/documents", {
+        headers: buildUserHeaders(),
+      });
       if (response.status === "success") {
         const docs = response.data || [];
         setDocuments(docs);
@@ -102,7 +116,9 @@ export default function VaultPage() {
     backgroundFetchRef.current = true;
     
     try {
-      const response = await apiClient.get<{ status: string; data: Document[] }>("/api/documents");
+      const response = await apiClient.get<{ status: string; data: Document[] }>("/api/documents", {
+        headers: buildUserHeaders(),
+      });
       if (response.status === "success") {
         const docs = response.data || [];
         setDocuments(docs);
@@ -128,7 +144,7 @@ export default function VaultPage() {
         }
 
         try {
-          await apiClient.delete(`/api/documents/${id}`);
+          await apiClient.delete(`/api/documents/${id}`, { headers: buildUserHeaders() });
           const updatedDocs = documents.filter((doc) => doc.id !== id);
           setDocuments(updatedDocs);
           
@@ -163,7 +179,8 @@ export default function VaultPage() {
           // Use the provided key - fetch as blob
           const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
           const response = await fetch(
-            `${baseUrl}/api/documents/${document.id}/download?encryption_key=${encodeURIComponent(key)}`
+            `${baseUrl}/api/documents/${document.id}/download?encryption_key=${encodeURIComponent(key)}`,
+            { headers: buildUserHeaders() }
           );
           
           if (!response.ok) {
@@ -183,7 +200,8 @@ export default function VaultPage() {
           // Use stored key
           const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
           const response = await fetch(
-            `${baseUrl}/api/documents/${document.id}/download?encryption_key=${encodeURIComponent(keyData.key)}`
+            `${baseUrl}/api/documents/${document.id}/download?encryption_key=${encodeURIComponent(keyData.key)}`,
+            { headers: buildUserHeaders() }
           );
           
           if (!response.ok) {
@@ -204,7 +222,8 @@ export default function VaultPage() {
         // Regular download
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
         const response = await fetch(
-          `${baseUrl}/api/documents/${document.id}/download`
+          `${baseUrl}/api/documents/${document.id}/download`,
+          { headers: buildUserHeaders() }
         );
         
         if (!response.ok) {

@@ -11,12 +11,14 @@ import { Upload, FileText, Loader2, Shield, Cloud, Lock, AlertCircle } from "luc
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { encryptFile, generateEncryptionKey, uint8ArrayToHex } from "@/lib/encryption-client";
 import { apiClient } from "@/lib/api";
+import { useSession } from "next-auth/react";
 
 interface EncryptedUploadProps {
   onUploadSuccess?: () => void;
 }
 
 export function EncryptedUpload({ onUploadSuccess }: EncryptedUploadProps) {
+  const { data: session } = useSession();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState("");
   const [expirationDate, setExpirationDate] = useState("");
@@ -100,7 +102,16 @@ export function EncryptedUpload({ onUploadSuccess }: EncryptedUploadProps) {
       setUploadProgress(50);
 
       // Upload to API (FormData will be handled automatically)
-      const response = await apiClient.post<{ status: string; data: { id: string } }>("/api/documents", formData);
+      const headers: HeadersInit = {};
+      if (session?.user?.id) {
+        headers["x-user-id"] = session.user.id;
+        if (session.user.email) headers["x-user-email"] = session.user.email;
+        if (session.user.name) headers["x-user-name"] = session.user.name;
+      }
+
+      const response = await apiClient.post<{ status: string; data: { id: string } }>("/api/documents", formData, {
+        headers,
+      });
 
       setUploadProgress(100);
 

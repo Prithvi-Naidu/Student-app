@@ -7,6 +7,7 @@ import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
 import { connectRedis } from './config/redis';
+import { attachUserContext } from './middleware/auth';
 
 // Load environment variables
 dotenv.config();
@@ -27,6 +28,7 @@ app.use(morgan('combined', {
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(attachUserContext);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

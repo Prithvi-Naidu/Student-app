@@ -1,7 +1,6 @@
 import multer from 'multer';
 import { Request } from 'express';
 import { validateFile } from '../utils/storage';
-import { AppError } from './errorHandler';
 
 const storage = multer.memoryStorage();
 
@@ -16,7 +15,7 @@ const fileFilter = (
   } else {
     // Pass the validation error to provide meaningful feedback to users
     // Multer will handle this error and attach it to req.fileValidationError
-    cb(new Error(validation.error || 'File validation failed'), false);
+    cb(new Error(validation.error || 'File validation failed'));
   }
 };
 
@@ -27,4 +26,3 @@ export const upload = multer({
   },
   fileFilter,
 });
-

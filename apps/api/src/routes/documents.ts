@@ -18,6 +18,7 @@ import {
   generateR2Key,
 } from '../utils/cloud-storage';
 import { isR2Configured as checkR2Config } from '../config/r2';
+import { AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -25,15 +26,17 @@ const router = Router();
 router.get('/', async (req: Request, res: Response) => {
   try {
     const { user_id, document_type } = req.query;
+    const authUserId = (req as AuthRequest).user?.id;
+    const resolvedUserId = authUserId || (user_id as string | undefined);
 
     let query = 'SELECT * FROM documents WHERE 1=1';
     const params: any[] = [];
     let paramCount = 0;
 
-    if (user_id) {
+    if (resolvedUserId) {
       paramCount++;
       query += ` AND user_id = $${paramCount}`;
-      params.push(user_id);
+      params.push(resolvedUserId);
     }
 
     if (document_type) {
@@ -122,7 +125,6 @@ router.post('/', (req: Request, res: Response, next: any) => {
     }
 
     const {
-      user_id,
       document_type,
       expiration_date,
       metadata,
@@ -130,6 +132,7 @@ router.post('/', (req: Request, res: Response, next: any) => {
       encrypt,
       country_code,
     } = req.body;
+    const authUserId = (req as AuthRequest).user?.id;
 
     // Debug logging - also log to response for easier debugging
     const debugInfo: any = {
@@ -223,7 +226,7 @@ router.post('/', (req: Request, res: Response, next: any) => {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *`,
       [
-        user_id || null,
+        authUserId || null,
         document_type,
         req.file.originalname,
         filePath,
@@ -285,8 +288,11 @@ router.get('/:id/download', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { encryption_key } = req.query; // Optional: if client-side encryption key provided
+    const authUserId = (req as AuthRequest).user?.id;
 
-    const result = await pool.query('SELECT * FROM documents WHERE id = $1', [id]);
+    const result = authUserId
+      ? await pool.query('SELECT * FROM documents WHERE id = $1 AND user_id = $2', [id, authUserId])
+      : await pool.query('SELECT * FROM documents WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -371,8 +377,11 @@ router.get('/:id/download', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const authUserId = (req as AuthRequest).user?.id;
 
-    const result = await pool.query('SELECT * FROM documents WHERE id = $1', [id]);
+    const result = authUserId
+      ? await pool.query('SELECT * FROM documents WHERE id = $1 AND user_id = $2', [id, authUserId])
+      : await pool.query('SELECT * FROM documents WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -398,9 +407,12 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const authUserId = (req as AuthRequest).user?.id;
 
     // Get document to delete file from storage
-    const result = await pool.query('SELECT * FROM documents WHERE id = $1', [id]);
+    const result = authUserId
+      ? await pool.query('SELECT * FROM documents WHERE id = $1 AND user_id = $2', [id, authUserId])
+      : await pool.query('SELECT * FROM documents WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -426,7 +438,11 @@ router.delete('/:id', async (req: Request, res: Response) => {
     }
 
     // Delete from database
-    await pool.query('DELETE FROM documents WHERE id = $1', [id]);
+    if (authUserId) {
+      await pool.query('DELETE FROM documents WHERE id = $1 AND user_id = $2', [id, authUserId]);
+    } else {
+      await pool.query('DELETE FROM documents WHERE id = $1', [id]);
+    }
 
     res.json({
       status: 'success',
