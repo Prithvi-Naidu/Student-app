@@ -3,7 +3,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 
-dotenv.config();
+const repoRoot = path.resolve(__dirname, '..', '..', '..');
+dotenv.config({ path: path.join(repoRoot, '.env') });
+dotenv.config({ path: path.join(repoRoot, 'apps', 'api', '.env') });
 
 const pool = new Pool({
   host: process.env.POSTGRES_HOST || 'localhost',

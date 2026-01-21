@@ -57,7 +57,7 @@ export function encryptFile(
     const keyBuffer = Buffer.from(key, 'hex');
     const iv = crypto.randomBytes(IV_LENGTH);
     
-    const cipher = crypto.createCipheriv(ALGORITHM, keyBuffer, iv);
+    const cipher = crypto.createCipheriv(ALGORITHM, keyBuffer, iv) as crypto.CipherGCM;
     
     const encrypted = Buffer.concat([
       cipher.update(buffer),
@@ -96,7 +96,7 @@ export function decryptFile(
     const ivBuffer = Buffer.from(iv, 'hex');
     const tagBuffer = Buffer.from(tag, 'hex');
     
-    const decipher = crypto.createDecipheriv(ALGORITHM, keyBuffer, ivBuffer);
+    const decipher = crypto.createDecipheriv(ALGORITHM, keyBuffer, ivBuffer) as crypto.DecipherGCM;
     decipher.setAuthTag(tagBuffer);
     
     const decrypted = Buffer.concat([

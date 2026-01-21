@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import path from 'path';
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
@@ -10,7 +11,9 @@ import { connectRedis } from './config/redis';
 import { attachUserContext } from './middleware/auth';
 
 // Load environment variables
-dotenv.config();
+const repoRoot = path.resolve(__dirname, '..', '..', '..');
+dotenv.config({ path: path.join(repoRoot, '.env') });
+dotenv.config({ path: path.join(repoRoot, 'apps', 'api', '.env') });
 
 const app = express();
 const PORT = process.env.API_PORT || 4000;
@@ -75,6 +78,11 @@ const startServer = async () => {
   }
 };
 
-startServer();
+const shouldStartServer =
+  process.env.NODE_ENV !== 'test' && !process.env.JEST_WORKER_ID;
+
+if (shouldStartServer) {
+  startServer();
+}
 
 export default app;

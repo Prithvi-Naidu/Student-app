@@ -1,5 +1,11 @@
 import { Pool } from 'pg';
 import { logger } from '../utils/logger';
+import path from 'path';
+import dotenv from 'dotenv';
+
+const repoRoot = path.resolve(__dirname, '..', '..', '..', '..');
+dotenv.config({ path: path.join(repoRoot, '.env') });
+dotenv.config({ path: path.join(repoRoot, 'apps', 'api', '.env') });
 
 // Create connection pool with better error handling
 // Use 127.0.0.1 instead of localhost to avoid local PostgreSQL conflicts
