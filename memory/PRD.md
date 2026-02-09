@@ -1,134 +1,72 @@
 # OneStop Student Ecosystem - Product Requirements Document
 
 ## Original Problem Statement
-Review, test, and ensure the Student App (https://github.com/Prithvi-Naidu/Student-app/tree/Test-branch) follows industry-grade standards with focus on:
-- Full functionality testing
-- Security and authentication
-- Performance optimization
-- Code quality and best practices
+Review, test, and ensure the Student App follows industry-grade standards with full functionality, security, performance, and code quality.
 
 ## Project Overview
 OneStop Student Ecosystem is a comprehensive platform empowering international students to smoothly transition, integrate, and thrive in the U.S.
 
 ## Tech Stack
-- **Frontend**: Next.js 14 (React 18) with TypeScript, Tailwind CSS, shadcn/ui
-- **Backend**: Node.js with Express + TypeScript
-- **Database**: PostgreSQL 15
-- **Cache**: Redis
+- **Frontend**: Next.js 14, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: Node.js/Express + TypeScript
+- **Database**: PostgreSQL 15 + Redis
 - **Authentication**: NextAuth.js with Google OAuth
 - **Cloud Storage**: Cloudflare R2
-- **External APIs**: RentCast for real housing listings
+- **External APIs**: RentCast for housing listings
 - **Security**: Rate limiting, Helmet.js, CORS
-- **Monorepo**: Turborepo with npm workspaces
 
-## What's Been Implemented
+## Completed Features
 
-### Session 1: Initial Review & Setup (2026-02-09)
-- [x] Cloned repository and set up environment
-- [x] Installed PostgreSQL and Redis
-- [x] Ran all 14 database migrations successfully
-- [x] Enabled all API routes (were previously commented out)
-- [x] Fixed auth configuration to work without OAuth providers
-- [x] Set up Next.js API proxy for browser-to-API communication
-- [x] Seeded test data (4 listings, 3 surveys, 12 forum posts, 3 banking articles)
+### Core Features
+- ✅ Housing Finder with RentCast API (real listings)
+- ✅ Community Forum with posts, voting, comments
+- ✅ Banking Guidance with articles and partner banks
+- ✅ Document Vault with Cloudflare R2 cloud storage
+- ✅ Survey Rewards with points system
+- ✅ Roommate Matching
 
-### Session 2: Integrations (2026-02-09)
-- [x] **Google OAuth** - Fully working, redirects to Google login
-- [x] **RentCast API** - Returns 50 real Boston listings with prices, beds, baths, sqft
-- [x] **Cloudflare R2** - Document upload working, tested with PDF
+### Security & Performance
+- ✅ Rate Limiting (100/min general, 30/min search, 20/min upload)
+- ✅ Google OAuth authentication
+- ✅ Saved Searches with notifications
 
-### Session 3: Production Features (2026-02-09)
-- [x] **Rate Limiting** - Implemented for all API endpoints:
-  - General: 100 requests/minute
-  - Search (RentCast): 30 requests/minute
-  - Upload: 20 requests/minute
-  - Auth: 10 requests/minute
-- [x] **Save Search Feature** - Users can save housing search criteria with:
-  - Custom name for each saved search
-  - Location, price range filters
-  - Email notifications toggle
-  - In-app notifications toggle
-  - Active/Paused state management
-  - Quick apply to re-run saved searches
-- [x] **UI Components** - Added Switch and Dialog components for Save Search modal
-- [x] **Data-testid Attributes** - Added to all key interactive elements
+### UI/UX Enhancements (Session 3)
+- ✅ **Dark Mode Toggle** - System-aware theme with sun/moon icon
+- ✅ **Loading Skeletons** - Smooth loading states for cards, posts, listings
+- ✅ **Toast Notifications** - Success/error feedback via Sonner
+- ✅ **Mobile Responsiveness** - Hamburger menu, adaptive layouts
+- ✅ **Housing Favorites** - Heart icon to save listings (localStorage)
+- ✅ **Roommate Compatibility Quiz** - 8-question quiz with scoring
+- ✅ **Document Expiry Alerts** - Dashboard warnings for expiring docs
+- ✅ **User Dashboard** - Stats, quick actions, activity overview
+- ✅ **Forum Post Bookmarks** - Bookmark icon to save posts
 
-## Test Results (100% Pass Rate)
-| Category | Status | Details |
-|----------|--------|---------|
-| Backend APIs | ✅ 17/17 | All endpoints working |
-| Frontend | ✅ 100% | All pages functional |
-| Google OAuth | ✅ Working | Redirects to accounts.google.com |
-| RentCast | ✅ Working | 50 listings from Boston search |
-| Cloudflare R2 | ✅ Working | PDF upload tested |
-| Rate Limiting | ✅ Active | Headers: RateLimit-*, X-RateLimit-* |
-| Save Search | ✅ Working | CRUD operations tested |
+## Test Results
+- Backend: 100% (all 17 endpoints)
+- Frontend: 90% (13/14 tests passed)
+- All core features functional
 
-## API Endpoints
-| Endpoint | Method | Rate Limit | Description |
-|----------|--------|------------|-------------|
-| /health | GET | 100/min | Health check |
-| /api/listings | GET/POST | 100/min | Local housing listings |
-| /api/housing/search | GET | 30/min | RentCast API proxy |
-| /api/forum/posts | GET/POST | 100/min | Forum posts |
-| /api/banking/resources | GET | 100/min | Banking articles |
-| /api/documents | GET/POST | 20/min | Document management (R2) |
-| /api/surveys | GET | 100/min | Survey listings |
-| /api/roommates/* | ALL | 100/min | Roommate matching |
-| /api/saved-searches | GET/POST/PUT/DELETE | 100/min | Saved search management |
+## New Components Created
+- `/components/theme-provider.tsx` - Next-themes wrapper
+- `/components/theme-toggle.tsx` - Dark/light mode switcher
+- `/components/ui/toaster.tsx` - Sonner toast provider
+- `/components/ui/skeleton.tsx` - Loading skeleton variants
+- `/components/ui/progress.tsx` - Progress bar
+- `/components/ui/radio-group.tsx` - Radio selection
+- `/components/housing/favorite-button.tsx` - Heart button
+- `/components/forum/bookmark-button.tsx` - Bookmark button
+- `/components/roommates/compatibility-quiz.tsx` - Quiz component
+- `/app/dashboard/page.tsx` - User dashboard
 
-## Configured Credentials
-| Service | Status | Notes |
-|---------|--------|-------|
-| Google OAuth | ✅ | Client ID: 985569...apps.googleusercontent.com |
-| RentCast API | ✅ | 44a9581... |
-| Cloudflare R2 | ✅ | Bucket: onestop-documents |
-| PostgreSQL | ✅ | Local instance |
-| Redis | ✅ | Local cache |
-
-## Architecture
-```
-/app/student-app-repo/
-├── apps/
-│   ├── web/                 # Next.js 14 frontend (port 3001)
-│   │   ├── app/             # App router pages
-│   │   ├── components/      # React components
-│   │   │   ├── housing/     # Save Search components
-│   │   │   └── ui/          # shadcn/ui + Dialog, Switch
-│   │   └── lib/             # Utilities, API client
-│   └── api/                 # Express backend (port 4000)
-│       ├── src/routes/      # API routes + saved-searches
-│       ├── src/middleware/  # Auth, rate-limit, error handling
-│       └── src/config/      # DB, Redis, R2 config
-├── packages/
-│   ├── shared/              # Shared types
-│   └── database/            # 15 migrations
-└── docker-compose.yml       # Local services
-```
-
-## Security Features
-- ✅ Helmet.js for HTTP security headers
-- ✅ CORS configured for frontend origin
-- ✅ Rate limiting on all API endpoints
-- ✅ Parameterized SQL queries (no injection)
-- ✅ OAuth 2.0 with PKCE for authentication
-- ✅ File type validation for uploads
-- ✅ Request size limits (10MB max)
+## Deployment Ready
+The app is ready for deployment to platforms supporting PostgreSQL:
+- Vercel (with external Postgres)
+- Railway
+- Render
+- AWS/GCP/Azure
 
 ## Remaining Backlog
-
-### P1 (High Priority)
-- [ ] Add GitHub, Apple, Microsoft OAuth providers
-- [ ] Email notification service for saved searches (SendGrid/Resend)
-- [ ] Background job for checking new listings against saved searches
-
-### P2 (Medium Priority)
-- [ ] Add housing listing creation UI for landlords
-- [ ] Implement survey completion and points redemption
-- [ ] Real-time notifications via WebSockets
-
-### P3 (Future)
-- [ ] Mobile app (React Native)
-- [ ] Chat between roommate matches
-- [ ] Payment processing for premium features
-- [ ] Multi-language support
+- [ ] Email notifications for saved searches
+- [ ] Background job for new listing alerts
+- [ ] Additional OAuth providers (GitHub, Apple, Microsoft)
+- [ ] Push notifications
