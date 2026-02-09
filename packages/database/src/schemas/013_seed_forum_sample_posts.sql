@@ -196,3 +196,6 @@ SELECT uuid_generate_v4(), p.id, NULL, NULL, 'Set goals for each session and kee
 FROM forum_posts p
 WHERE p.title = 'Study groups: finding the right people'
   AND (SELECT COUNT(*) FROM forum_comments c WHERE c.post_id = p.id) < 2;
+
+
+

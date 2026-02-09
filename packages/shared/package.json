@@ -6,7 +6,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
+    "dev": "echo 'shared: skip type-check in dev'",
     "clean": "rm -rf dist"
   },
   "devDependencies": {

@@ -61,3 +61,6 @@ CREATE INDEX IF NOT EXISTS idx_forum_comment_votes_comment_id ON forum_comment_v
 CREATE INDEX IF NOT EXISTS idx_forum_comment_votes_user_id ON forum_comment_votes(user_id);
 CREATE INDEX IF NOT EXISTS idx_forum_notifications_user_id ON forum_notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_forum_notifications_read_at ON forum_notifications(read_at);
+
+
+

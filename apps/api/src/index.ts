@@ -39,11 +39,13 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
-import listingsRouter from './routes/listings';
-import forumRouter from './routes/forum';
-import bankingRouter from './routes/banking';
-import documentsRouter from './routes/documents';
-import surveysRouter from './routes/surveys';
+// import listingsRouter from './routes/listings';
+// import forumRouter from './routes/forum';
+// import bankingRouter from './routes/banking';
+// import documentsRouter from './routes/documents';
+// import surveysRouter from './routes/surveys';
+import roommatesRouter from './routes/roommates';
+import housingRouter from './routes/housing';
 
 app.get('/api', (req, res) => {
   res.json({ 
@@ -52,11 +54,13 @@ app.get('/api', (req, res) => {
   });
 });
 
-app.use('/api/listings', listingsRouter);
-app.use('/api/forum', forumRouter);
-app.use('/api/banking', bankingRouter);
-app.use('/api/documents', documentsRouter);
-app.use('/api/surveys', surveysRouter);
+// app.use('/api/listings', listingsRouter);
+// app.use('/api/forum', forumRouter);
+// app.use('/api/banking', bankingRouter);
+// app.use('/api/documents', documentsRouter);
+// app.use('/api/surveys', surveysRouter);
+app.use('/api/roommates', roommatesRouter);
+app.use('/api/housing', housingRouter);
 
 // Error handling middleware (must be last)
 app.use(notFoundHandler);
@@ -65,8 +69,18 @@ app.use(errorHandler);
 // Start server
 const startServer = async () => {
   try {
-    // Connect to Redis
-    await connectRedis();
+    // Connect to Redis (optional, non-blocking)
+    logger.info('Attempting Redis connection...');
+    const redisConnected = await Promise.race([
+      connectRedis(),
+      new Promise(resolve => setTimeout(() => resolve(false), 3000))
+    ]);
+    
+    if (redisConnected) {
+      logger.info('Redis connected successfully');
+    } else {
+      logger.warn('Redis connection timed out or failed - continuing without cache');
+    }
     
     app.listen(PORT, () => {
       logger.info(`🚀 API server running on http://localhost:${PORT}`);

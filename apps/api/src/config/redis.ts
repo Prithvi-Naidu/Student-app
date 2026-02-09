@@ -18,6 +18,10 @@ redisClient.on('connect', () => {
 // Connect to Redis
 export const connectRedis = async () => {
   try {
+    if (redisClient.isOpen) {
+      logger.info('Redis already connected');
+      return true;
+    }
     await redisClient.connect();
     logger.info('Connected to Redis');
     return true;

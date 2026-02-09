@@ -10,9 +10,7 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    typedRoutes: true,
-  },
+  // experimental typedRoutes removed — slows dev startup significantly
 }
 
 module.exports = nextConfig

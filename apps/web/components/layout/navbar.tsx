@@ -37,6 +37,12 @@ export function Navbar() {
             Forum
           </Link>
           <Link
+            href="/roommates"
+            className="transition-colors hover:text-foreground/80 text-foreground/60"
+          >
+            Roommates
+          </Link>
+          <Link
             href="/banking"
             className="transition-colors hover:text-foreground/80 text-foreground/60"
           >
@@ -98,6 +104,13 @@ export function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
             >
               Forum
+            </Link>
+            <Link
+              href="/roommates"
+              className="block text-sm font-medium transition-colors hover:text-foreground/80"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Roommates
             </Link>
             <Link
               href="/banking"
