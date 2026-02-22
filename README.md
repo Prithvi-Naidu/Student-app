@@ -87,6 +87,9 @@ REDIS_URL=redis://localhost:6379
 API_PORT=4000
 NODE_ENV=development
 
+# RentCast (Housing search - get key at https://app.rentcast.io/app/api)
+RENTCAST_API_KEY=
+
 # Frontend (apps/web/.env.local)
 NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_APP_URL=http://localhost:3000

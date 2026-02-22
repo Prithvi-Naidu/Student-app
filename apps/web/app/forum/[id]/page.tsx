@@ -58,12 +58,13 @@ export default function ForumPostPage({ params }: { params: { id: string } }) {
     return headers;
   };
 
-  const fetchPost = async () => {
+  const fetchPost = async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       setError(null);
       const response = await apiClient.get<{ status: string; data: any }>(`/api/forum/posts/${params.id}`, {
         headers: buildUserHeaders(),
+        signal,
       });
       if (response.status === "success") {
         setPost(response.data);
@@ -74,6 +75,7 @@ export default function ForumPostPage({ params }: { params: { id: string } }) {
         setError("Failed to fetch post");
       }
     } catch (err: any) {
+      if (err.name === "AbortError") return;
       setError(err.message || "Failed to fetch post");
     } finally {
       setIsLoading(false);
@@ -81,7 +83,9 @@ export default function ForumPostPage({ params }: { params: { id: string } }) {
   };
 
   useEffect(() => {
-    fetchPost();
+    const controller = new AbortController();
+    fetchPost(controller.signal);
+    return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 

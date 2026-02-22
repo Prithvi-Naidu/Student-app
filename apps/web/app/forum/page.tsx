@@ -43,13 +43,14 @@ export default function ForumPage() {
     return params.toString();
   }, [selectedCategory, searchQuery]);
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       setError(null);
       const endpoint = `/api/forum/posts${queryParams ? `?${queryParams}` : ""}`;
       const response = await apiClient.get<{ status: string; data: any[] }>(endpoint, {
         headers: buildUserHeaders(),
+        signal,
       });
       if (response.status === "success") {
         setPosts(response.data || []);
@@ -57,23 +58,25 @@ export default function ForumPage() {
         setError("Failed to fetch posts");
       }
     } catch (err: any) {
+      if (err.name === "AbortError") return;
       setError(err.message || "Failed to fetch posts");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (signal?: AbortSignal) => {
     if (!session?.user?.id) return;
     try {
       const response = await apiClient.get<{ status: string; data: any[] }>(
         "/api/forum/notifications",
-        { headers: buildUserHeaders() }
+        { headers: buildUserHeaders(), signal }
       );
       if (response.status === "success") {
         setNotifications(response.data || []);
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err.name === "AbortError") return;
       // Silent fail for notifications
     }
   };
@@ -88,8 +91,10 @@ export default function ForumPage() {
   };
 
   useEffect(() => {
-    fetchPosts();
-    fetchNotifications();
+    const controller = new AbortController();
+    fetchPosts(controller.signal);
+    fetchNotifications(controller.signal);
+    return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryParams]);
 

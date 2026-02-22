@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ type BankingResourceListItem = {
   updated_at: string;
 };
 
-async function fetchResources(): Promise<BankingResourceListItem[]> {
+const fetchResources = cache(async (): Promise<BankingResourceListItem[]> => {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
     const res = await fetch(`${baseUrl}/api/banking/resources`, { 
@@ -46,7 +47,7 @@ async function fetchResources(): Promise<BankingResourceListItem[]> {
     console.error('Error fetching banking resources:', error);
     return [];
   }
-}
+});
 
 export default async function BankingPage() {
   const resources = await fetchResources();

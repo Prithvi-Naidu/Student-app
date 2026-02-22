@@ -40,6 +40,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 import listingsRouter from './routes/listings';
+import housingRouter from './routes/housing';
 import forumRouter from './routes/forum';
 import bankingRouter from './routes/banking';
 import documentsRouter from './routes/documents';
@@ -53,6 +54,7 @@ app.get('/api', (req, res) => {
 });
 
 app.use('/api/listings', listingsRouter);
+app.use('/api/housing', housingRouter);
 app.use('/api/forum', forumRouter);
 app.use('/api/banking', bankingRouter);
 app.use('/api/documents', documentsRouter);

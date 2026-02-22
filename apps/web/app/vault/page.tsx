@@ -42,11 +42,13 @@ export default function VaultPage() {
   };
 
   useEffect(() => {
-    fetchDocuments();
+    const controller = new AbortController();
+    fetchDocuments(false, controller.signal);
+    return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchDocuments = async (forceRefresh = false) => {
+  const fetchDocuments = async (forceRefresh = false, signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -84,6 +86,7 @@ export default function VaultPage() {
       // Fetch from API
       const response = await apiClient.get<{ status: string; data: Document[] }>("/api/documents", {
         headers: buildUserHeaders(),
+        signal,
       });
       if (response.status === "success") {
         const docs = response.data || [];
@@ -99,6 +102,7 @@ export default function VaultPage() {
         setError(response.message || "Failed to fetch documents");
       }
     } catch (err: any) {
+      if (err.name === "AbortError") return;
       console.error("Error fetching documents:", err);
       setError(err.message || "Failed to fetch documents");
     } finally {
@@ -294,7 +298,7 @@ export default function VaultPage() {
         )}
 
         {/* Upload Section */}
-        <EncryptedUpload onUploadSuccess={() => fetchDocuments(true)} />
+        <EncryptedUpload onUploadSuccess={() => fetchDocuments(true, undefined)} />
 
         {/* DigiLocker Integration (for Indian students) - Collapsible Card */}
         {countryCode === "IN" && <DigiLockerIntegration />}
