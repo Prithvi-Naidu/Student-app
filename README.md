@@ -8,34 +8,32 @@ A comprehensive platform empowering international students to smoothly transitio
 - **Backend**: Node.js with Express + TypeScript
 - **Database**: PostgreSQL 15+
 - **Cache**: Redis
-- **Storage**: Local filesystem (Phase 1), S3 (future)
-- **Infrastructure**: Docker Compose (local), AWS/GCP (production)
+- **Storage**: Local filesystem, Cloudflare R2 (S3-compatible) for document vault
+- **Infrastructure**: Docker Compose (local), Vercel + Railway (production)
 - **Monorepo**: Turborepo with npm workspaces
 
 ## Project Structure
 
 ```
-Student_App/
+Student-app/
 ├── apps/
 │   ├── web/                    # Next.js frontend
 │   │   ├── app/               # App router pages
 │   │   ├── components/        # React components
-│   │   └── lib/               # Utilities, API clients
+│   │   └── lib/               # Utilities, API clients, auth
 │   └── api/                   # Node.js backend API
 │       ├── src/
 │       │   ├── routes/        # API routes
-│       │   ├── middleware/    # Error handling, multer
-│       │   ├── config/        # Database, Redis config
-│       │   └── utils/         # Logger, storage
+│       │   ├── middleware/   # Error handling, multer, auth
+│       │   ├── config/        # Database, Redis, R2 config
+│       │   └── utils/         # Logger, storage, encryption
 │       └── __tests__/         # API tests
 ├── packages/
 │   ├── shared/                # Shared types and utilities
 │   └── database/              # Database migrations and schemas
-├── infrastructure/
-│   └── docker/                # Docker configs (future)
-├── .github/
-│   └── workflows/             # CI/CD pipelines
-└── docker-compose.yml         # Local development services
+├── docs/                      # Documentation
+├── docker-compose.yml         # Local development (PostgreSQL, Redis)
+└── vercel.json                # Vercel deployment config
 ```
 
 ## Getting Started
@@ -69,18 +67,17 @@ This creates all necessary database tables.
 
 4. **Set up environment variables:**
 
-Create `.env` files in `apps/web` and `apps/api` with:
+Create `.env` files in `apps/web` (as `.env.local`) and `apps/api` with:
 ```env
 # Database
 DATABASE_URL=postgresql://onestop:onestop_dev_password@localhost:5433/onestop_db
 POSTGRES_USER=onestop
 POSTGRES_PASSWORD=onestop_dev_password
 POSTGRES_DB=onestop_db
-
-# Redis
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5433
 
+# Redis
 REDIS_URL=redis://localhost:6379
 
 # API
@@ -97,7 +94,6 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 # Authentication (NextAuth.js)
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=<generate-secret-32-chars-minimum>
-DATABASE_URL=postgresql://onestop:onestop_dev_password@localhost:5433/onestop_db
 
 # OAuth Providers (see docs/oauth-setup-guide.md for setup instructions)
 GOOGLE_CLIENT_ID=
@@ -106,8 +102,6 @@ GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 APPLE_CLIENT_ID=
 APPLE_CLIENT_SECRET=
-APPLE_TEAM_ID=
-APPLE_KEY_ID=
 MICROSOFT_CLIENT_ID=
 MICROSOFT_CLIENT_SECRET=
 MICROSOFT_TENANT_ID=common
@@ -125,14 +119,17 @@ The application will be available at:
 - **Backend API**: http://localhost:4000
 - **API Health Check**: http://localhost:4000/health
 
-## Available Features (Phase 1)
+For a condensed setup guide, see [QUICKSTART.md](QUICKSTART.md).
 
-### ✅ Completed Modules
+## Available Features
+
+### Completed Modules
 
 1. **Housing Finder** (`/housing`)
    - Listings CRUD operations
-   - Search and filter by location, price
-   - API endpoints: `/api/listings`
+   - RentCast API integration for rental search
+   - Search and filter by location, price, bedrooms
+   - API endpoints: `/api/listings`, `/api/housing`
 
 2. **Community Forum** (`/forum`)
    - Post creation and discussion
@@ -148,14 +145,23 @@ The application will be available at:
 
 4. **Document Vault** (`/vault`)
    - Secure document upload
+   - Cloud storage (Cloudflare R2)
+   - Server-side encryption (AES-256-GCM)
    - Document expiration tracking
-   - Local file storage
+   - DigiLocker integration (planned)
    - API endpoints: `/api/documents`
 
 5. **Survey Rewards** (`/surveys`)
    - Survey listings
    - Points system
    - API endpoints: `/api/surveys`
+
+6. **Authentication**
+   - NextAuth.js with PostgreSQL adapter
+   - OAuth providers: Google, GitHub, Apple, Microsoft
+   - Session management
+   - Protected routes (e.g. `/dashboard`)
+   - Sign-in page at `/signin`
 
 ## Development Commands
 
@@ -175,13 +181,14 @@ The application will be available at:
 ### Individual Packages
 - `cd apps/web && npm run dev` - Start only frontend
 - `cd apps/api && npm run dev` - Start only backend
-- `cd apps/web && npm run test` - Test frontend
-- `cd apps/api && npm run test` - Test backend
+- `cd apps/web && npm test` - Test frontend
+- `cd apps/api && npm test` - Test backend
 
 ## API Endpoints
 
 ### Health
 - `GET /health` - Health check
+- `GET /api` - API info
 
 ### Listings
 - `GET /api/listings` - Get all listings (with filters)
@@ -189,6 +196,10 @@ The application will be available at:
 - `POST /api/listings` - Create listing
 - `PUT /api/listings/:id` - Update listing
 - `DELETE /api/listings/:id` - Delete listing
+
+### Housing (RentCast)
+- `GET /api/housing/rentals` - Search rental listings (query: city, state, zipCode, bedrooms, minPrice, maxPrice, limit, offset)
+- `GET /api/housing/rentals/:id` - Get single rental listing
 
 ### Forum
 - `GET /api/forum/posts` - Get all posts
@@ -206,7 +217,7 @@ The application will be available at:
 ### Documents
 - `GET /api/documents` - Get all documents
 - `GET /api/documents/:id` - Get single document
-- `POST /api/documents` - Upload document (multipart/form-data)
+- `POST /api/documents` - Upload document (multipart/form-data; supports `use_cloud_storage`, `encrypt`)
 - `GET /api/documents/:id/download` - Download document
 - `DELETE /api/documents/:id` - Delete document
 - `GET /api/documents/expiring/soon` - Get expiring documents
@@ -216,28 +227,9 @@ The application will be available at:
 - `GET /api/surveys/:id` - Get single survey
 - `POST /api/surveys` - Create survey (admin)
 
-## Phase 1 Status
+## Deployment
 
-✅ **Completed**
-- [x] Project Setup & Infrastructure
-- [x] Housing Finder Module
-- [x] Community Forum
-- [x] Banking Guidance
-- [x] Digital Vault
-- [x] Survey Rewards
-- [x] Modern UI/UX Design System
-- [x] Testing Infrastructure
-
-⏳ **Deferred to Later Phase**
-- [ ] Authentication System (moved to Phase 2)
-
-## Next Steps
-
-1. **Connect Frontend to Backend**: Update API client calls in frontend components
-2. **Add Authentication**: Implement user registration/login (Phase 2)
-3. **Add File Upload**: Complete document upload functionality
-4. **Add More Tests**: Expand test coverage
-5. **Deploy to Staging**: Set up cloud deployment
+Deploy the frontend to Vercel and the API to Railway. See [docs/DEPLOY.md](docs/DEPLOY.md) for a step-by-step guide.
 
 ## Testing
 
@@ -246,11 +238,18 @@ Run tests for all packages:
 npm run test
 ```
 
-Run tests for specific package:
+Run tests for a specific package:
 ```bash
 cd apps/api && npm test
 cd apps/web && npm test
 ```
+
+## Documentation
+
+- [QUICKSTART.md](QUICKSTART.md) - Condensed setup guide
+- [docs/DEPLOY.md](docs/DEPLOY.md) - Deployment (Vercel + Railway)
+- [docs/oauth-setup-guide.md](docs/oauth-setup-guide.md) - OAuth provider setup
+- [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) - Document vault implementation details
 
 ## Contributing
 
@@ -262,4 +261,3 @@ cd apps/web && npm test
 ## License
 
 Private - All rights reserved
-
