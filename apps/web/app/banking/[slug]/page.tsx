@@ -27,7 +27,7 @@ type BankingResource = {
 };
 
 async function fetchResource(slug: string): Promise<BankingResource | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const baseUrl = typeof process.env.NEXT_PUBLIC_API_URL === "string" ? process.env.NEXT_PUBLIC_API_URL : "http://localhost:4000";
   const res = await fetch(`${baseUrl}/api/banking/resources/${encodeURIComponent(slug)}`, {
     cache: "no-store",
   });

@@ -181,7 +181,7 @@ export default function VaultPage() {
           }
           
           // Use the provided key - fetch as blob
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+          const baseUrl = typeof process.env.NEXT_PUBLIC_API_URL === "string" ? process.env.NEXT_PUBLIC_API_URL : "http://localhost:4000";
           const response = await fetch(
             `${baseUrl}/api/documents/${document.id}/download?encryption_key=${encodeURIComponent(key)}`,
             { headers: buildUserHeaders() }
@@ -202,7 +202,7 @@ export default function VaultPage() {
           window.URL.revokeObjectURL(url);
         } else {
           // Use stored key
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+          const baseUrl = typeof process.env.NEXT_PUBLIC_API_URL === "string" ? process.env.NEXT_PUBLIC_API_URL : "http://localhost:4000";
           const response = await fetch(
             `${baseUrl}/api/documents/${document.id}/download?encryption_key=${encodeURIComponent(keyData.key)}`,
             { headers: buildUserHeaders() }
@@ -224,7 +224,7 @@ export default function VaultPage() {
         }
       } else {
         // Regular download
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        const baseUrl = typeof process.env.NEXT_PUBLIC_API_URL === "string" ? process.env.NEXT_PUBLIC_API_URL : "http://localhost:4000";
         const response = await fetch(
           `${baseUrl}/api/documents/${document.id}/download`,
           { headers: buildUserHeaders() }

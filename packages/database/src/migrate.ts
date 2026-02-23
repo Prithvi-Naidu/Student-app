@@ -7,13 +7,17 @@ const repoRoot = path.resolve(__dirname, '..', '..', '..');
 dotenv.config({ path: path.join(repoRoot, '.env') });
 dotenv.config({ path: path.join(repoRoot, 'apps', 'api', '.env') });
 
-const pool = new Pool({
-  host: process.env.POSTGRES_HOST || 'localhost',
-  port: parseInt(process.env.POSTGRES_PORT || '5433'),
-  database: process.env.POSTGRES_DB || 'onestop_db',
-  user: process.env.POSTGRES_USER || 'onestop',
-  password: process.env.POSTGRES_PASSWORD || 'onestop_dev_password',
-});
+const pool = new Pool(
+  process.env.DATABASE_URL
+    ? { connectionString: process.env.DATABASE_URL }
+    : {
+        host: process.env.POSTGRES_HOST || 'localhost',
+        port: parseInt(process.env.POSTGRES_PORT || '5433'),
+        database: process.env.POSTGRES_DB || 'onestop_db',
+        user: process.env.POSTGRES_USER || 'onestop',
+        password: process.env.POSTGRES_PASSWORD || 'onestop_dev_password',
+      }
+);
 
 async function runMigrations() {
   const client = await pool.connect();

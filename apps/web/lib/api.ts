@@ -1,8 +1,8 @@
-// Empty string = same-origin (for Vercel deployment where API runs on same domain)
+// Empty string = same-origin. Undefined = localhost (dev). Set to "" in Vercel for same-origin.
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL !== undefined
+  typeof process.env.NEXT_PUBLIC_API_URL === "string"
     ? process.env.NEXT_PUBLIC_API_URL
-    : 'http://localhost:4000';
+    : "http://localhost:4000";
 
 export class ApiClient {
   private baseUrl: string;

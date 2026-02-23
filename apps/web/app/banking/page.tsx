@@ -19,7 +19,7 @@ type BankingResourceListItem = {
 
 const fetchResources = cache(async (): Promise<BankingResourceListItem[]> => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+    const baseUrl = typeof process.env.NEXT_PUBLIC_API_URL === "string" ? process.env.NEXT_PUBLIC_API_URL : "http://localhost:4000";
     const res = await fetch(`${baseUrl}/api/banking/resources`, { 
       cache: "no-store",
       next: { revalidate: 0 }
