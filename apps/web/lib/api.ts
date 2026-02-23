@@ -1,4 +1,8 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+// Empty string = same-origin (for Vercel deployment where API runs on same domain)
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL !== undefined
+    ? process.env.NEXT_PUBLIC_API_URL
+    : 'http://localhost:4000';
 
 export class ApiClient {
   private baseUrl: string;

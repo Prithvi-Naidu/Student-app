@@ -139,7 +139,7 @@ export async function decryptFile(
     const decrypted = await crypto.subtle.decrypt(
       {
         name: ALGORITHM,
-        iv: iv,
+        iv: iv as BufferSource,
         tagLength: TAG_LENGTH,
       },
       key,

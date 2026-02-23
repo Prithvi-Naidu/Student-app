@@ -19,12 +19,12 @@ interface StepByStepEnhancedProps {
 
 export function StepByStepEnhanced({ steps, className }: StepByStepEnhancedProps) {
   const stepIcons = [
-    <Search className="h-6 w-6" />,
-    <CreditCard className="h-6 w-6" />,
-    <FileText className="h-6 w-6" />,
-    <Building2 className="h-6 w-6" />,
-    <ClipboardCheck className="h-6 w-6" />,
-    <CheckCircle className="h-6 w-6" />,
+    <Search key="search" className="h-6 w-6" />,
+    <CreditCard key="credit-card" className="h-6 w-6" />,
+    <FileText key="file-text" className="h-6 w-6" />,
+    <Building2 key="building" className="h-6 w-6" />,
+    <ClipboardCheck key="clipboard" className="h-6 w-6" />,
+    <CheckCircle key="check-circle" className="h-6 w-6" />,
   ];
 
   return (

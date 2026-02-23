@@ -80,8 +80,11 @@ const startServer = async () => {
   }
 };
 
+// Don't start HTTP server when running on Vercel (serverless) or in tests
 const shouldStartServer =
-  process.env.NODE_ENV !== 'test' && !process.env.JEST_WORKER_ID;
+  process.env.NODE_ENV !== 'test' &&
+  !process.env.JEST_WORKER_ID &&
+  !process.env.VERCEL;
 
 if (shouldStartServer) {
   startServer();

@@ -98,7 +98,7 @@ function enhanceHTMLContent(html: string): string {
   // Compact step indicators with blue gradient and hover effects
   enhanced = enhanced.replace(
     /<h3>(Step \d+[^<]*)<\/h3>\s*<p>([^<]+)<\/p>/gi,
-    (match, stepText, stepDescription) => {
+    (_match: string, stepText: string, stepDescription: string) => {
       const stepNum = stepText.match(/\d+/)?.[0] || '';
       const stepTitle = stepText.replace(/Step \d+:\s*/i, '');
       return `
@@ -120,7 +120,7 @@ function enhanceHTMLContent(html: string): string {
   // Also handle steps without immediate paragraph
   enhanced = enhanced.replace(
     /<h3>(Step \d+[^<]*)<\/h3>/gi,
-    (match, stepText) => {
+    (_match: string, stepText: string) => {
       const stepNum = stepText.match(/\d+/)?.[0] || '';
       const stepTitle = stepText.replace(/Step \d+:\s*/i, '');
       return `
@@ -141,11 +141,11 @@ function enhanceHTMLContent(html: string): string {
   // Enhance lists with better styling
   enhanced = enhanced.replace(
     /<ul>([\s\S]*?)<\/ul>/gi,
-    (match, content) => {
+    (_match: string, content: string) => {
       if (content.includes('<li>')) {
         return `<ul class="space-y-2 my-4">${content}</ul>`;
       }
-      return match;
+      return _match;
     }
   );
 
@@ -164,11 +164,11 @@ function enhanceHTMLContent(html: string): string {
   // Enhance Bank-Specific Information section (under Bank-Specific Information h2)
   enhanced = enhanced.replace(
     /<h2[^>]*>Bank-Specific Information<\/h2>([\s\S]*?)(?=<h2|$)/gi,
-    (match, bankSection) => {
+    (_match: string, bankSection: string) => {
       // Process each bank entry
       const enhancedBanks = bankSection.replace(
         /<h3>([^<]+)<\/h3>([\s\S]*?)(?=<h3>|<h2>|$)/gi,
-        (bankMatch, bankName, bankContent) => {
+        (_bankMatch: string, bankName: string, bankContent: string) => {
           // Extract key information with more flexible regex
           const requirementsMatch = bankContent.match(/<p><strong>Requirements:<\/strong>\s*([^<]+)<\/p>/i);
           const feesMatch = bankContent.match(/<p><strong>Fees:<\/strong>\s*([^<]+)<\/p>/i);
@@ -201,10 +201,10 @@ function enhanceHTMLContent(html: string): string {
   // Enhance Common Challenges section
   enhanced = enhanced.replace(
     /<h2[^>]*>Common Challenges and Solutions<\/h2>([\s\S]*?)(?=<h2|$)/gi,
-    (match, challengesContent) => {
+    (_match: string, challengesContent: string) => {
       const enhancedChallenges = challengesContent.replace(
         /<h3>Challenge: ([^<]+)<\/h3>\s*<p><strong>Solution:<\/strong>\s*([^<]+)<\/p>/gi,
-        (challengeMatch, challenge, solution) => {
+        (_challengeMatch: string, challenge: string, solution: string) => {
           return `
             <div class="challenge-card my-2.5 p-3 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
               <div class="font-semibold text-sm text-foreground mb-1">Challenge: ${challenge}</div>
@@ -220,7 +220,7 @@ function enhanceHTMLContent(html: string): string {
   // Enhance Tips for Success section
   enhanced = enhanced.replace(
     /<h2[^>]*>Tips for Success<\/h2>([\s\S]*?)(?=<h2|$)/gi,
-    (match, tipsContent) => {
+    (_match: string, tipsContent: string) => {
       // Enhance list items with checkmarks
       const enhancedTips = tipsContent.replace(
         /<li>([^<]+)<\/li>/gi,
@@ -233,10 +233,10 @@ function enhanceHTMLContent(html: string): string {
   // Enhance FAQ section (only within Frequently Asked Questions h2)
   enhanced = enhanced.replace(
     /<h2[^>]*>Frequently Asked Questions<\/h2>([\s\S]*?)(?=<h2|$)/gi,
-    (match, faqContent) => {
+    (_match: string, faqContent: string) => {
       const enhancedFAQ = faqContent.replace(
         /<h3>([^<]+\?)<\/h3>\s*<p>([^<]+)<\/p>/gi,
-        (faqMatch, question, answer) => {
+        (_faqMatch: string, question: string, answer: string) => {
           return `
             <div class="faq-item my-3 p-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors">
               <h3 class="text-base font-semibold mb-1.5 text-foreground">${question}</h3>

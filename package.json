@@ -19,6 +19,7 @@
     "db:migrate": "cd packages/database && npm run migrate"
   },
   "devDependencies": {
+    "next": "^14.0.4",
     "turbo": "^1.10.16"
   },
   "engines": {

@@ -11,7 +11,7 @@ const nextConfig = {
     ],
   },
   experimental: {
-    typedRoutes: true,
+    typedRoutes: false, // Disabled for deployment - enable when all routes exist
   },
 }
 

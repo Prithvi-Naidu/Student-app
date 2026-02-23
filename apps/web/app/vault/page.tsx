@@ -99,7 +99,7 @@ export default function VaultPage() {
           timestamp: Date.now(),
         }));
       } else {
-        setError(response.message || "Failed to fetch documents");
+        setError((response as { message?: string }).message || "Failed to fetch documents");
       }
     } catch (err: any) {
       if (err.name === "AbortError") return;
@@ -193,10 +193,10 @@ export default function VaultPage() {
           
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
-          const link = document.createElement("a");
+          const link = window.document.createElement("a");
           link.href = url;
           link.setAttribute("download", document.file_name);
-          document.body.appendChild(link);
+          window.document.body.appendChild(link);
           link.click();
           link.remove();
           window.URL.revokeObjectURL(url);
@@ -214,10 +214,10 @@ export default function VaultPage() {
           
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
-          const link = document.createElement("a");
+          const link = window.document.createElement("a");
           link.href = url;
           link.setAttribute("download", document.file_name);
-          document.body.appendChild(link);
+          window.document.body.appendChild(link);
           link.click();
           link.remove();
           window.URL.revokeObjectURL(url);
@@ -236,10 +236,10 @@ export default function VaultPage() {
         
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
+        const link = window.document.createElement("a");
         link.href = url;
         link.setAttribute("download", document.file_name);
-        document.body.appendChild(link);
+        window.document.body.appendChild(link);
         link.click();
         link.remove();
         window.URL.revokeObjectURL(url);

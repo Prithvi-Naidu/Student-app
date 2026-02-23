@@ -3,9 +3,10 @@ import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import Apple from "next-auth/providers/apple";
 import AzureAD from "next-auth/providers/azure-ad";
+import Credentials from "next-auth/providers/credentials";
 
 // Build providers array - only include providers that have credentials configured
-const providers = [];
+const providers: NextAuthConfig["providers"] = [];
 
 // Google provider
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -45,6 +46,16 @@ if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
       clientId: process.env.MICROSOFT_CLIENT_ID,
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
       tenantId: process.env.MICROSOFT_TENANT_ID || "common",
+    } as any)
+  );
+}
+
+// Placeholder provider for build when no OAuth is configured (always rejects)
+if (providers.length === 0) {
+  providers.push(
+    Credentials({
+      credentials: {},
+      authorize: () => null,
     })
   );
 }
